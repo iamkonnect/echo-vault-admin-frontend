@@ -1,28 +1,29 @@
 version: '3.8'
 
 services:
-  admin:
-    build: .
+  admin-frontend:
     image: iamkonnect/echo-vault-admin-frontend:latest
     container_name: echo-vault-admin-frontend
     expose:
-      - "3000"
+      - "80"
     labels:
       - traefik.enable=true
+      - traefik.docker.network=traefik
       - traefik.http.routers.admin-frontend.rule=Host(`admin.echovaultz.com`)
       - traefik.http.routers.admin-frontend.entrypoints=websecure
       - traefik.http.routers.admin-frontend.tls=true
-      - traefik.http.services.admin-frontend.loadbalancer.server.port=3000
+      - traefik.http.services.admin-frontend.loadbalancer.server.port=80
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
     restart: unless-stopped
     networks:
-      - echo-vault-network
+      - traefik
 
 networks:
-  echo-vault-network:
+  traefik:
     external: true
+    name: traefik
