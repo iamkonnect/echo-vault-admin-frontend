@@ -25,7 +25,7 @@ export default function GiftManagement() {
           </thead>
           <tbody>
             <tr style={styles.tableRow}>
-              <td style={styles.tableCell} colSpan="5" style={{ textAlign: 'center', color: '#888' }}>No gifts configured yet</td>
+              <td style={{...styles.tableCell, textAlign: 'center', color: '#888'}} colSpan="5">No gifts configured yet</td>
             </tr>
           </tbody>
         </table>

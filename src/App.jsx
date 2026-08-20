@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import apiService from './services/apiService';
 
 // Pages
 import Dashboard from './pages/Dashboard';
+import Settings from './pages/Settings';
 import UserDirectory from './pages/UserDirectory';
 import ArtistVerification from './pages/ArtistVerification';
 import MusicManagement from './pages/MusicManagement';
@@ -24,23 +25,6 @@ import UploadShorts from './pages/artist/UploadShorts';
 import ArtistRevenue from './pages/artist/ArtistRevenue';
 import ArtistInsights from './pages/artist/ArtistInsights';
 import ArtistLiveInsights from './pages/artist/ArtistLiveInsights';
-
-const API_BASE = 'https://api.echovaultz.com/api';
-
-const api = axios.create({
-  baseURL: API_BASE,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('adminToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -64,11 +48,7 @@ function App() {
     
     if (token && userTypeStored) {
       try {
-        const endpoint = userTypeStored === 'admin' 
-          ? '/admin/dashboard'
-          : '/artist/dashboard';
-        
-        const response = await api.get(endpoint);
+        const response = await apiService.getDashboard(userTypeStored);
         setUser(response.data);
         setStats(response.data.stats);
         setUserType(userTypeStored);
@@ -91,24 +71,15 @@ function App() {
     setError('');
 
     try {
-      const endpoint = type === 'admin'
-        ? '/auth/login-dashboard'
-        : '/auth/login-artist';
-
-      const loginResponse = await api.post(endpoint, {
-        email,
-        password,
-      });
+      const loginResponse = type === 'admin'
+        ? await apiService.loginAdmin(email, password)
+        : await apiService.loginArtist(email, password);
 
       if (loginResponse.data.token) {
         localStorage.setItem('adminToken', loginResponse.data.token);
         localStorage.setItem('userType', type);
 
-        const dashboardEndpoint = type === 'admin'
-          ? '/admin/dashboard'
-          : '/artist/dashboard';
-
-        const dashboardResponse = await api.get(dashboardEndpoint);
+        const dashboardResponse = await apiService.getDashboard(type);
 
         setUser(dashboardResponse.data);
         setStats(dashboardResponse.data.stats);
@@ -220,7 +191,7 @@ function App() {
     const isAdmin = userType === 'admin';
 
     const adminNavigation = [
-      { label: 'OVERVIEW', section: 'Dashboard', icon: '📊' },
+      { label: 'OVERVIEW', section: 'dashboard', icon: '📊' },
       { label: 'USER MANAGEMENT', items: [
         { label: 'User Directory', page: 'userDirectory', icon: '👥' },
         { label: 'Artist Verification', page: 'artistVerification', icon: '⭐' },
@@ -237,6 +208,9 @@ function App() {
         { label: 'Gift Management', page: 'giftManagement', icon: '🎁' },
         { label: 'Payouts', page: 'payouts', icon: '💰' },
         { label: 'Reports', page: 'reports', icon: '📋' },
+      ]},
+      { label: 'SYSTEM', items: [
+        { label: 'Settings', page: 'settings', icon: '⚙️' },
       ]},
     ];
 
@@ -291,8 +265,8 @@ function App() {
                 <>
                   <div style={styles.sectionLabel}>{section.label}</div>
                   <button
-                    style={{...styles.navItem, backgroundColor: currentPage === section.section ? 'rgba(16, 185, 129, 0.2)' : 'transparent', borderLeft: currentPage === section.section ? '3px solid #10b981' : 'none'}}
-                    onClick={() => setCurrentPage(section.section)}
+                    style={{...styles.navItem, backgroundColor: currentPage === (section.section || section.page) ? 'rgba(16, 185, 129, 0.2)' : 'transparent', borderLeft: currentPage === (section.section || section.page) ? '3px solid #10b981' : 'none'}}
+                    onClick={() => setCurrentPage(section.section || section.page)}
                   >
                     <span style={styles.navIcon}>{section.icon}</span>
                     <span>{section.label}</span>
@@ -330,6 +304,7 @@ function App() {
             {isAdmin ? (
               <>
                 {currentPage === 'dashboard' && <Dashboard user={user} stats={stats} />}
+                {currentPage === 'settings' && <Settings />}
                 {currentPage === 'userDirectory' && <UserDirectory />}
                 {currentPage === 'artistVerification' && <ArtistVerification />}
                 {currentPage === 'createAdmin' && <CreateAdmin />}
@@ -511,7 +486,6 @@ const styles = {
     cursor: 'pointer',
     textAlign: 'left',
     transition: 'all 0.2s ease',
-    paddingLeft: '16px',
   },
   navIcon: {
     fontSize: '16px',

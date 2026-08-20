@@ -1,7 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import apiService from '../services/apiService';
 
 export default function Dashboard({ user, stats }) {
-  const platformStats = stats || {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.getDashboard('admin');
+        setData(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Dashboard error:', err);
+        setError(err.response?.data?.message || 'Failed to load dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
+  const platformStats = data || stats || {
     totalUsers: 0,
     activeArtists: 0,
     pendingPayouts: 0,
@@ -10,6 +33,14 @@ export default function Dashboard({ user, stats }) {
     totalSongs: 0,
     totalVideos: 0,
   };
+
+  if (loading) {
+    return <div style={styles.loading}>Loading dashboard...</div>;
+  }
+
+  if (error) {
+    return <div style={styles.error}>Error: {error}</div>;
+  }
 
   return (
     <div style={styles.container}>
@@ -32,7 +63,7 @@ export default function Dashboard({ user, stats }) {
             <span style={styles.metricLabel}>TOTAL USERS</span>
           </div>
           <p style={styles.metricNumber}>{platformStats.totalUsers || 0}</p>
-          <p style={styles.metricChange}>+2.4% vs last month</p>
+          <p style={styles.metricChange}>All registered users</p>
         </div>
 
         <div style={styles.metricCard}>
@@ -41,7 +72,7 @@ export default function Dashboard({ user, stats }) {
             <span style={styles.metricLabel}>ACTIVE ARTISTS</span>
           </div>
           <p style={styles.metricNumber}>{platformStats.activeArtists || 0}</p>
-          <p style={styles.metricChange}>+1.2% vs last month</p>
+          <p style={styles.metricChange}>Currently active</p>
         </div>
 
         <div style={styles.metricCard}>
@@ -50,7 +81,7 @@ export default function Dashboard({ user, stats }) {
             <span style={styles.metricLabel}>TOTAL SONGS</span>
           </div>
           <p style={styles.metricNumber}>{platformStats.totalSongs || 0}</p>
-          <p style={styles.metricChange}>+8 new this week</p>
+          <p style={styles.metricChange}>On platform</p>
         </div>
 
         <div style={styles.metricCard}>
@@ -59,7 +90,7 @@ export default function Dashboard({ user, stats }) {
             <span style={styles.metricLabel}>TOTAL VIDEOS</span>
           </div>
           <p style={styles.metricNumber}>{platformStats.totalVideos || 0}</p>
-          <p style={styles.metricChange}>+3 new this week</p>
+          <p style={styles.metricChange}>On platform</p>
         </div>
 
         <div style={styles.metricCard}>
@@ -123,10 +154,7 @@ export default function Dashboard({ user, stats }) {
             </thead>
             <tbody>
               <tr style={styles.tableRow}>
-                <td style={styles.tableCell}>No withdrawals yet</td>
-                <td style={styles.tableCell}>-</td>
-                <td style={styles.tableCell}>-</td>
-                <td style={styles.tableCell}>-</td>
+                <td style={{...styles.tableCell, textAlign: 'center'}} colSpan="4">No withdrawals yet</td>
               </tr>
             </tbody>
           </table>
@@ -137,9 +165,9 @@ export default function Dashboard({ user, stats }) {
 }
 
 const styles = {
-  container: {
-    width: '100%',
-  },
+  loading: { fontSize: '16px', color: '#10b981', padding: '40px', textAlign: 'center' },
+  error: { fontSize: '16px', color: '#ef4444', padding: '40px', textAlign: 'center' },
+  container: { width: '100%' },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
