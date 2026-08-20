@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+
+// Pages
 import Dashboard from './pages/Dashboard';
 import UserDirectory from './pages/UserDirectory';
 import ArtistVerification from './pages/ArtistVerification';
@@ -9,6 +11,11 @@ import ShortsManagement from './pages/ShortsManagement';
 import AdsManagement from './pages/AdsManagement';
 import SliderManagement from './pages/SliderManagement';
 import Payouts from './pages/Payouts';
+import GiftManagement from './pages/GiftManagement';
+import Reports from './pages/Reports';
+import CreateAdmin from './pages/CreateAdmin';
+
+// Artist Pages
 import ArtistDashboard from './pages/artist/ArtistDashboard';
 import UploadSong from './pages/artist/UploadSong';
 import MyMusic from './pages/artist/MyMusic';
@@ -45,6 +52,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     checkAuth();
@@ -62,6 +70,7 @@ function App() {
         
         const response = await api.get(endpoint);
         setUser(response.data);
+        setStats(response.data.stats);
         setUserType(userTypeStored);
         setIsLoggedIn(true);
         setCurrentPage('dashboard');
@@ -102,6 +111,7 @@ function App() {
         const dashboardResponse = await api.get(dashboardEndpoint);
 
         setUser(dashboardResponse.data);
+        setStats(dashboardResponse.data.stats);
         setEmail('');
         setPassword('');
         setUserType(type);
@@ -125,6 +135,7 @@ function App() {
     setIsLoggedIn(false);
     setCurrentPage('login');
     setUser(null);
+    setStats(null);
     setEmail('');
     setPassword('');
   };
@@ -213,6 +224,7 @@ function App() {
       { label: 'USER MANAGEMENT', items: [
         { label: 'User Directory', page: 'userDirectory', icon: '👥' },
         { label: 'Artist Verification', page: 'artistVerification', icon: '⭐' },
+        { label: 'Add Admin', page: 'createAdmin', icon: '➕' },
       ]},
       { label: 'CONTENT MANAGEMENT', items: [
         { label: 'Music Management', page: 'musicManagement', icon: '🎵' },
@@ -222,7 +234,9 @@ function App() {
         { label: 'Slider Management', page: 'sliderManagement', icon: '🎠' },
       ]},
       { label: 'MANAGEMENT', items: [
+        { label: 'Gift Management', page: 'giftManagement', icon: '🎁' },
         { label: 'Payouts', page: 'payouts', icon: '💰' },
+        { label: 'Reports', page: 'reports', icon: '📋' },
       ]},
     ];
 
@@ -248,7 +262,7 @@ function App() {
     return (
       <div style={styles.dashboardContainer}>
         {/* Sidebar */}
-        <div style={{...styles.sidebar, width: sidebarOpen ? '250px' : '0'}}>
+        <div style={{...styles.sidebar, width: sidebarOpen ? '280px' : '0', overflowX: 'hidden'}}>
           <div style={styles.sidebarHeader}>
             <div style={styles.logo}>{isAdmin ? '🔐' : '🎵'}</div>
             <div style={styles.logoText}>
@@ -265,7 +279,7 @@ function App() {
                   {section.items.map((item) => (
                     <button
                       key={item.page}
-                      style={{...styles.navItem, backgroundColor: currentPage === item.page ? 'rgba(16, 185, 129, 0.2)' : 'transparent'}}
+                      style={{...styles.navItem, backgroundColor: currentPage === item.page ? 'rgba(16, 185, 129, 0.2)' : 'transparent', borderLeft: currentPage === item.page ? '3px solid #10b981' : 'none'}}
                       onClick={() => setCurrentPage(item.page)}
                     >
                       <span style={styles.navIcon}>{item.icon}</span>
@@ -277,7 +291,7 @@ function App() {
                 <>
                   <div style={styles.sectionLabel}>{section.label}</div>
                   <button
-                    style={{...styles.navItem, backgroundColor: currentPage === section.section ? 'rgba(16, 185, 129, 0.2)' : 'transparent'}}
+                    style={{...styles.navItem, backgroundColor: currentPage === section.section ? 'rgba(16, 185, 129, 0.2)' : 'transparent', borderLeft: currentPage === section.section ? '3px solid #10b981' : 'none'}}
                     onClick={() => setCurrentPage(section.section)}
                   >
                     <span style={styles.navIcon}>{section.icon}</span>
@@ -287,6 +301,10 @@ function App() {
               )}
             </div>
           ))}
+
+          <button onClick={handleLogout} style={styles.logoutBtnSidebar}>
+            🚪 Logout
+          </button>
         </div>
 
         {/* Main Content */}
@@ -297,7 +315,10 @@ function App() {
               ☰
             </button>
             <div style={styles.topBarRight}>
-              <span style={styles.userInfo}>{isAdmin ? 'Platform' : 'Your'} Revenue: $0</span>
+              <span style={styles.userInfo}>
+                {isAdmin ? '💰 Platform Revenue: $' : '💰 Your Revenue: $'}
+                {stats?.revenue ? stats.revenue.toFixed(2) : '0.00'}
+              </span>
               <button onClick={handleLogout} style={styles.logoutBtn}>
                 Logout
               </button>
@@ -308,24 +329,27 @@ function App() {
           <div style={styles.pageContent}>
             {isAdmin ? (
               <>
-                {currentPage === 'dashboard' && <Dashboard user={user} />}
+                {currentPage === 'dashboard' && <Dashboard user={user} stats={stats} />}
                 {currentPage === 'userDirectory' && <UserDirectory />}
                 {currentPage === 'artistVerification' && <ArtistVerification />}
+                {currentPage === 'createAdmin' && <CreateAdmin />}
                 {currentPage === 'musicManagement' && <MusicManagement />}
                 {currentPage === 'videoManagement' && <VideoManagement />}
                 {currentPage === 'shortsManagement' && <ShortsManagement />}
                 {currentPage === 'adsManagement' && <AdsManagement />}
                 {currentPage === 'sliderManagement' && <SliderManagement />}
+                {currentPage === 'giftManagement' && <GiftManagement />}
                 {currentPage === 'payouts' && <Payouts />}
+                {currentPage === 'reports' && <Reports />}
               </>
             ) : (
               <>
-                {currentPage === 'artistDashboard' && <ArtistDashboard user={user} />}
+                {currentPage === 'artistDashboard' && <ArtistDashboard user={user} stats={stats} />}
                 {currentPage === 'uploadSong' && <UploadSong />}
                 {currentPage === 'myMusic' && <MyMusic />}
                 {currentPage === 'uploadVideo' && <UploadVideo />}
                 {currentPage === 'uploadShorts' && <UploadShorts />}
-                {currentPage === 'artistRevenue' && <ArtistRevenue />}
+                {currentPage === 'artistRevenue' && <ArtistRevenue stats={stats} />}
                 {currentPage === 'artistInsights' && <ArtistInsights />}
                 {currentPage === 'artistLiveInsights' && <ArtistLiveInsights />}
               </>
@@ -429,9 +453,11 @@ const styles = {
   sidebar: {
     background: '#1a1540',
     borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-    overflow: 'auto',
+    overflowY: 'auto',
     transition: 'width 0.3s ease',
     paddingTop: '20px',
+    display: 'flex',
+    flexDirection: 'column',
   },
   sidebarHeader: {
     display: 'flex',
@@ -450,6 +476,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   logoText: {
     flex: 1,
@@ -484,9 +511,24 @@ const styles = {
     cursor: 'pointer',
     textAlign: 'left',
     transition: 'all 0.2s ease',
+    paddingLeft: '16px',
   },
   navIcon: {
     fontSize: '16px',
+    minWidth: '20px',
+  },
+  logoutBtnSidebar: {
+    margin: '20px 16px 16px',
+    padding: '10px 16px',
+    background: 'rgba(239, 68, 68, 0.2)',
+    color: '#fca5a5',
+    border: '1px solid rgba(239, 68, 68, 0.5)',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: 'bold',
+    transition: 'all 0.2s ease',
+    marginTop: 'auto',
   },
   mainContent: {
     flex: 1,
@@ -526,6 +568,8 @@ const styles = {
     borderRadius: '4px',
     cursor: 'pointer',
     fontSize: '12px',
+    fontWeight: 'bold',
+    transition: 'all 0.2s ease',
   },
   pageContent: {
     flex: 1,

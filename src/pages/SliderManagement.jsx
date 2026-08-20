@@ -1,6 +1,4 @@
 import React from 'react';
-import { Placeholder } from './Placeholder';
-
-export default function SliderManagement() {
-  return <Placeholder title="Slider Management" icon="🎠" />;
-}
+const T = ({ t, i, c }) => (<div><h1 style={s.title}>{i} {t}</h1><div style={s.card}><table style={s.table}><thead><tr style={s.th}>{c.map(x => <th key={x} style={s.td}>{x}</th>)}</tr></thead><tbody><tr style={s.tr}><td style={{...s.td, textAlign: 'center'}} colSpan={c.length}>No data</td></tr></tbody></table></div></div>);
+export default function SliderManagement() { return <T t="Slider Management" i="🎠" c={['Name', 'Position', 'Status', 'Actions']} />; }
+const s = { title: { fontSize: '32px', fontWeight: 'bold', color: '#10b981', marginBottom: '24px' }, card: { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '24px' }, table: { width: '100%', borderCollapse: 'collapse' }, th: { background: 'rgba(16, 185, 129, 0.1)' }, tr: {}, td: { padding: '12px', fontSize: '13px', color: 'rgba(255,255,255,0.8)' } };
